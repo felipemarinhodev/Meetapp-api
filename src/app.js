@@ -1,10 +1,17 @@
 import express from 'express';
+import routes from './routes';
 
-const server = express();
-server.use(express.json());
+class App {
+  constructor() {
+    this.server = express();
 
-server.get('/', (req, res) => {
-  return res.json({ api: 'MeetApp do Felipe' });
-});
+    this.server.use(express.json());
+    this.routes();
+  }
 
-server.listen(3300);
+  routes() {
+    this.server.use(routes);
+  }
+}
+
+export default new App().server;
