@@ -1,0 +1,11 @@
+{
+  "name": "meetapp-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/felipmarinho/Meetapp-api.git",
+  "author": "Felipe Marinho <felipmarinho@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
