@@ -1,8 +1,10 @@
 import { isAfter } from 'date-fns';
+import { Op } from 'sequelize';
 import Meetup from '../models/Meetup';
 import Subscribe from '../models/Subscribe';
 import User from '../models/User';
 import Mail from '../../lib/Mail';
+import File from '../models/File';
 
 class SubscribeController {
   async store(req, res) {
@@ -88,6 +90,42 @@ class SubscribeController {
     });
 
     return res.json(subscribe);
+  }
+
+  async index(req, res) {
+    const subscribed = await Subscribe.findAll({
+      attributes: ['subscribe_in'],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          where: {
+            id: req.userId,
+          },
+          attributes: [],
+        },
+        {
+          model: Meetup,
+          as: 'meetup',
+          attributes: ['id', 'description', 'location', 'scheduling'],
+          include: [
+            {
+              model: File,
+              as: 'banner',
+              attributes: ['id', 'path', 'url'],
+            },
+          ],
+          where: {
+            scheduling: {
+              [Op.gt]: new Date().toISOString(),
+            },
+          },
+        },
+      ],
+      order: [['meetup', 'scheduling']],
+    });
+
+    return res.json({ subscribed });
   }
 }
 

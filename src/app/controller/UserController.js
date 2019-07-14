@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 import User from '../models/User';
 
 class UserController {
-  async get(req, res) {
+  async index(req, res) {
     const users = await User.findAll();
     console.log(`Usuarios: ${JSON.stringify(users)}`);
     return res.json({ users });
