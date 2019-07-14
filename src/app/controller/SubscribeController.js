@@ -2,11 +2,20 @@ import { isAfter } from 'date-fns';
 import Meetup from '../models/Meetup';
 import Subscribe from '../models/Subscribe';
 import User from '../models/User';
+import Mail from '../../lib/Mail';
 
 class SubscribeController {
   async store(req, res) {
     const { id } = req.params;
-    const meetup = await Meetup.findByPk(id);
+    const meetup = await Meetup.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name', 'email'],
+        },
+      ],
+    });
     const user_id = req.userId;
 
     if (meetup.user_id === user_id) {
@@ -36,11 +45,13 @@ class SubscribeController {
      * Check if the user already subscribed in the Meetup
      */
     if (subscribes.find(subscribe => subscribe.user_id === user_id)) {
-      return res.json({ error: 'The user already subscribed in the Meetup' });
+      return res
+        .status(400)
+        .json({ error: 'The user already subscribed in the Meetup' });
     }
 
     /**
-     * Check if the user already subscribed in the Meetup
+     * The user already subscribed in the another Meetup
      */
     const mySubscribles = await Subscribe.findAll({
       where: {
@@ -55,8 +66,8 @@ class SubscribeController {
       ],
     });
 
-    if (mySubscribles) {
-      return res.json({
+    if (mySubscribles.length > 0) {
+      return res.status(400).json({
         error: 'The user already subscribed in the another Meetup',
       });
     }
@@ -66,6 +77,16 @@ class SubscribeController {
       meetup_id: meetup.id,
       subscribe_in: new Date(),
     });
+
+    const member = await User.findByPk(req.userId);
+    const subject = `New member for Meetup: ${meetup.title}`;
+    const text = `The ${member.name} joined for the meetup ${meetup.title}. His email is ${member.email}.`;
+    await Mail.sendMail({
+      to: `${meetup.user.name} <${meetup.user.email}>`,
+      subject,
+      text,
+    });
+
     return res.json(subscribe);
   }
 }
